@@ -1,4 +1,6 @@
-
+using Microsoft.EntityFrameworkCore;
+using Pokemon.Data;
+using Pokemon.Services;
 
 namespace Pokemon
 {
@@ -6,23 +8,26 @@ namespace Pokemon
     {
         public static async Task Main(string[] args)
         {
-
-            var httpClient = new HttpClient();
-            var response = await httpClient.GetAsync("https://pokeapi.co/api/v2/pokemon/25"); // Pikachu
-            var content = await response.Content.ReadAsStringAsync();
-
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // Configurar serviços da aplicação
 
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            // Banco de dados
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            // Serviços
+            builder.Services.AddScoped<GameService>();
+            builder.Services.AddScoped<UserService>();
+
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // Configuração do pipeline HTTP
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -31,8 +36,17 @@ namespace Pokemon
 
             app.UseAuthorization();
 
-
             app.MapControllers();
+
+            // Opcional: seed de dados
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                db.Database.Migrate(); // aplica migrações
+
+                var seeder = new PokemonSeeder(db);
+                await seeder.SeedFirst151Async();
+            }
 
             app.Run();
         }
