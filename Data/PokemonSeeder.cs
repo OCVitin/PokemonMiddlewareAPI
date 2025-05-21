@@ -45,7 +45,7 @@ namespace Pokemon.Data
                 _context.Pokemons.Add(pokemon);
 
                 Console.WriteLine($"Adicionado: {i} - {name}");
-                await Task.Delay(100); // boa prática para não sobrecarregar a API
+                await Task.Delay(100);
             }
 
             await _context.SaveChangesAsync();

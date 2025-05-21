@@ -1,7 +1,6 @@
 ﻿using Pokemon.Models;
-using System;
 using Microsoft.EntityFrameworkCore;
-using Pokemon.Data
+using Pokemon.Data;
 
 namespace Pokemon.Services
 {
@@ -51,7 +50,16 @@ namespace Pokemon.Services
         {
             var draw = await GetOrCreateDrawAsync(date);
             var pokemon = await _context.Pokemons.FindAsync(draw.PokemonId);
+
+            if (pokemon == null)
+                throw new InvalidOperationException($"Pokémon com ID {draw.PokemonId} não encontrado.");
+
             return string.Equals(pokemon.Name, guess, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public async Task<PokemonEntry?> GetPokemonByIdAsync(int id)
+        {
+            return await _context.Pokemons.FindAsync(id);
         }
     }
 
